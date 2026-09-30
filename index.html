@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Touchline: football news in one feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1ee;--card:#fff;--ink:#0f1a16;--mute:#5b6b64;--line:#d5ddd8;--pitch:#0e5a3c;--pitch2:#0a4630;--gold:#f2b705;--chip:#e1e8e3}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0c1512;--card:#14201b;--ink:#eaf1ed;--mute:#93a59c;--line:#243530;--pitch:#2fa574;--pitch2:#1d7a55;--chip:#1b2b25}}
+:root[data-theme=dark]{--bg:#0c1512;--card:#14201b;--ink:#eaf1ed;--mute:#93a59c;--line:#243530;--pitch:#2fa574;--pitch2:#1d7a55;--chip:#1b2b25}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Barlow,system-ui,sans-serif;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+header{background:var(--pitch2);color:#fff;border-bottom:4px solid var(--gold)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.logo{font:700 30px/1 'Barlow Condensed',sans-serif;letter-spacing:.5px}
+.logo small{display:block;font:500 13px Barlow,sans-serif;opacity:.75;letter-spacing:0;margin-top:3px}
+.tools{display:flex;gap:8px}
+.btn{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:600 14px Barlow,sans-serif;cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.24)}
+.search{width:100%;border:0;border-radius:8px;padding:11px 14px;font:500 16px Barlow,sans-serif;margin-bottom:12px;background:#fff;color:#0f1a16}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:var(--chip);color:var(--ink);border-radius:999px;padding:7px 14px;font:600 14px Barlow,sans-serif;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--pitch);color:#fff}
+.srcs{margin-top:8px;font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.srcs label{display:flex;gap:5px;align-items:center;cursor:pointer}
+.srcs input{accent-color:var(--pitch)}
+#status{margin-left:auto}
+main{padding:20px 0 48px}
+.lead{display:grid;grid-template-columns:1.3fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.lead .img{min-height:280px;background:linear-gradient(135deg,var(--pitch2),var(--pitch)) center/cover}
+.lead .txt{padding:24px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.lead h2{font:700 clamp(28px,4vw,42px)/1.05 'Barlow Condensed',sans-serif;margin:0}
+.lead p{margin:0;color:var(--mute)}
+.meta{font-size:13px;color:var(--mute);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.src{font-weight:600;color:var(--pitch)}
+.new{background:var(--gold);color:#1a1400;border-radius:4px;padding:1px 6px;font-weight:600;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;grid-template-columns:1fr 96px;gap:12px;align-items:start;transition:border-color .15s}
+.card:hover{border-color:var(--pitch)}
+.card h3{font:600 20px/1.15 'Barlow Condensed',sans-serif;letter-spacing:.2px;margin:0 0 6px}
+.card .th{width:96px;height:96px;border-radius:8px;object-fit:cover;background:var(--chip)}
+.card.noimg{grid-template-columns:1fr}
+.empty{padding:48px 16px;text-align:center;color:var(--mute)}
+.skel{height:110px;border-radius:10px;background:linear-gradient(90deg,var(--chip),var(--card),var(--chip));background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+footer{color:var(--mute);font-size:13px;padding-bottom:32px}
+@media(max-width:720px){.lead{grid-template-columns:1fr}.lead .img{min-height:190px;order:-1}.lead .txt{padding:16px}.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.skel{animation:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="top">
+    <div class="logo">TOUCHLINE<small>Football headlines from the best sources, in one feed</small></div>
+    <div class="tools"><button class="btn" id="refresh">Refresh</button><button class="btn" id="theme">Theme</button></div>
+  </div>
+  <input class="search" id="q" type="search" placeholder="Search players, clubs, competitions" aria-label="Search headlines">
+</div></header>
+<div class="bar"><div class="wrap">
+  <div class="chips" id="chips" role="group" aria-label="Topics"></div>
+  <div class="srcs" id="srcs"><span id="status" aria-live="polite"></span></div>
+</div></div>
+<main class="wrap">
+  <div id="lead"></div>
+  <div class="grid" id="grid"></div>
+  <footer>Headlines link to the original publishers. Touchline shows titles and short summaries only.</footer>
+</main>
+<script>
+const SOURCES=[
+ {id:'bbc',name:'BBC Sport',url:'https://feeds.bbci.co.uk/sport/football/rss.xml'},
+ {id:'gdn',name:'The Guardian',url:'https://www.theguardian.com/football/rss'},
+ {id:'sky',name:'Sky Sports',url:'https://www.skysports.com/rss/12040'},
+ {id:'espn',name:'ESPN',url:'https://www.espn.com/espn/rss/soccer/news'}
+];
+const TOPICS={
+ 'All':null,
+ 'Premier League':/premier league|arsenal|chelsea|liverpool|man(chester)? (city|utd|united)|tottenham|spurs|newcastle|aston villa|west ham|brighton|everton|fulham|brentford|crystal palace|wolves|bournemouth|nottingham forest|leeds|sunderland|burnley/i,
+ 'Champions League':/champions league|europa league|conference league|uefa/i,
+ 'La Liga':/la ?liga|real madrid|barcelona|barça|atl[eé]tico|sevilla|villarreal|real sociedad/i,
+ 'Serie A':/serie a|juventus|inter milan|ac milan|napoli|lazio|atalanta|\broma\b/i,
+ 'Bundesliga':/bundesliga|bayern|dortmund|leverkusen|leipzig/i,
+ 'Transfers':/transfer|sign(s|ing|ed)?\b|loan|bid for|medical|release clause|linked with|target/i
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return (d.textContent||'').replace(/\s+/g,' ').trim()};
+let items=[],topic='All',active=new Set(SOURCES.map(s=>s.id)),query='',stamp=null,loaded=0;
+
+function ago(t){const m=Math.round((Date.now()-t)/6e4);if(m<1)return'just now';if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<24)return h+' h ago';return Math.round(h/24)+' d ago'}
+function safeUrl(u){try{const x=new URL(u);return /^https?:$/.test(x.protocol)?x.href:''}catch{return''}}
+function imgOf(it){
+ const c=[it.thumbnail,it.enclosure&&it.enclosure.link];
+ const m=/<img[^>]+src=["']([^"']+)/i.exec(it.description||it.content||'');
+ if(m)c.push(m[1]);
+ return safeUrl(c.find(x=>x&&safeUrl(x)))||'';
+}
+async function pull(s){
+ const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(s.url));
+ const j=await r.json();
+ if(j.status!=='ok')throw new Error('feed');
+ return j.items.map(it=>({
+  src:s.id,srcName:s.name,title:strip(it.title),link:safeUrl(it.link),
+  sum:strip(it.description).slice(0,180),img:imgOf(it),
+  t:new Date((it.pubDate||'').replace(' ','T')+'Z').getTime()||Date.now()
+ }));
+}
+async function load(){
+ $('#status').textContent='Updating…';
+ const res=await Promise.allSettled(SOURCES.map(pull));
+ loaded=res.filter(r=>r.status==='fulfilled').length;
+ const all=res.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+ if(all.length){
+  const seen=new Set();
+  items=all.filter(i=>i.link&&!seen.has(i.link)&&seen.add(i.link)).sort((a,b)=>b.t-a.t);
+  stamp=Date.now();
+  try{localStorage.setItem('tl',JSON.stringify({items,stamp}))}catch{}
+ }
+ render();
+}
+function visible(){
+ const re=TOPICS[topic],q=query.toLowerCase();
+ return items.filter(i=>active.has(i.src)&&(!re||re.test(i.title+' '+i.sum))&&(!q||(i.title+' '+i.sum).toLowerCase().includes(q)));
+}
+function card(i){
+ const th=i.img?`<img class="th" src="${esc(i.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'';
+ return `<a class="card ${i.img?'':'noimg'}" href="${esc(i.link)}" target="_blank" rel="noopener noreferrer"><div><h3>${esc(i.title)}</h3><div class="meta"><span class="src">${esc(i.srcName)}</span><span>${ago(i.t)}</span>${Date.now()-i.t<36e5?'<span class="new">New</span>':''}</div></div>${th}</a>`;
+}
+function render(){
+ const v=visible(),lead=v.find(i=>i.img)||v[0];
+ const rest=v.filter(i=>i!==lead);
+ $('#lead').innerHTML=lead?`<a class="lead" href="${esc(lead.link)}" target="_blank" rel="noopener noreferrer"><div class="img" ${lead.img?`style="background-image:url('${esc(lead.img)}')"`:''}></div><div class="txt"><div class="meta"><span class="src">${esc(lead.srcName)}</span><span>${ago(lead.t)}</span></div><h2>${esc(lead.title)}</h2><p>${esc(lead.sum)}</p></div></a>`:'';
+ $('#grid').innerHTML=rest.map(card).join('')||(lead?'':`<div class="empty">${items.length?'No headlines match. Try another topic or clear the search.':'Could not load any feeds. Check your connection, then press Refresh.'}</div>`);
+ $('#status').textContent=stamp?`Updated ${new Date(stamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} from ${loaded||'cached'} ${loaded===1?'source':'sources'}`:'';
+}
+function build(){
+ $('#chips').innerHTML=Object.keys(TOPICS).map(k=>`<button class="chip" aria-pressed="${k===topic}" data-k="${esc(k)}">${esc(k)}</button>`).join('');
+ const st=$('#status');
+ $('#srcs').innerHTML=SOURCES.map(s=>`<label><input type="checkbox" data-s="${s.id}" ${active.has(s.id)?'checked':''}>${esc(s.name)}</label>`).join('');
+ $('#srcs').appendChild(st);
+}
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;topic=b.dataset.k;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));render()});
+$('#srcs').addEventListener('change',e=>{const s=e.target.dataset.s;if(!s)return;e.target.checked?active.add(s):active.delete(s);render()});
+$('#q').addEventListener('input',e=>{query=e.target.value.trim();render()});
+$('#refresh').onclick=load;
+$('#theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);r.dataset.theme=d?'light':'dark'};
+build();
+$('#grid').innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+try{const c=JSON.parse(localStorage.getItem('tl')||'null');if(c&&c.items){items=c.items;stamp=c.stamp;render()}}catch{}
+load();
+setInterval(load,5*60*1000);
+</script>
+</body>
+</html>
